@@ -1,0 +1,29 @@
+dependencies:
+  esp32-wifi-manager:
+    component_hash: cd46fa41e32ec85f34b43d4c74b1489f681d5624d205cc8cde22327c9fc91d57
+    source:
+      git: https://github.com/huardti/esp32-wifi-manager.git
+      path: .
+      type: git
+    version: 278319504537e8d0b6485284eeb35c4df2b9ad68
+  espressif/mdns:
+    component_hash: 090826401d30f756037f91d91068f470ba8d0ef04fe507d3aa8761305cecd7ca
+    source:
+      service_url: https://api.components.espressif.com/
+      type: service
+    version: 1.2.3
+  idf:
+    component_hash: null
+    source:
+      type: idf
+    version: 5.0.2
+  lvgl/lvgl:
+    component_hash: d07243e386216341468b06fdd3516030d6858fde82bddf1226ef028fe33c4df0
+    source:
+      git: https://github.com/lvgl/lvgl.git
+      path: .
+      type: git
+    version: 37f5bbf69fbb6fd8be65dd34d34da707949abe1f
+manifest_hash: a3efbeb32a4d8f3b856188423699dfd8bb341d25242e4c55fff53cb59ecd777b
+target: esp32c3
+version: 1.0.0

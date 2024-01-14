@@ -1,0 +1,17 @@
+## IDF Component Manager Manifest File
+dependencies:
+  # v8.3.11
+  lvgl/lvgl:
+    git: https://github.com/lvgl/lvgl.git
+    version: "v8.0.2"
+  #lvgl/lvgl_esp32_drivers:
+  #  git: https://github.com/lvgl/lvgl_esp32_drivers.git
+  #  version: "1759b774a98d4a9f573436b6cfcb51a318e045fe" # develop_old
+  ## Required IDF version
+  idf:
+    version: ">=5.0.0,<5.1.0"
+  mdns: ">=1.0.3"
+  esp32-wifi-manager:
+    # Using the fork since it has idf 5 support
+    version: huardti/idf-5.X-support
+    git: https://github.com/huardti/esp32-wifi-manager.git
