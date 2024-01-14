@@ -3,6 +3,7 @@
 #include "esp_log.h"
 #include "sensors.h"
 #include "gfx.h"
+#include "wifi.h"
 
 #define MAX_HTTP_OUTPUT_BUFFER 1024
 #define TAG "CircleMonitor"
@@ -311,6 +312,12 @@ esp_err_t update_sensor(sensor *s)
 esp_err_t update_sensors(void)
 {
     esp_err_t err;
+    bool wifi_connected = wifi_is_connected();
+    if (!wifi_connected) {
+        ESP_LOGI(TAG, "Waiting for WiFi for sensor update...");
+        return ESP_OK;
+    }
+
     ESP_LOGI(TAG, "Updating all sensors...");
     for (int i = 0; i < sizeof(sensors) / sizeof(sensor); i++)
     {
@@ -322,6 +329,7 @@ esp_err_t update_sensors(void)
             return err;
         }
     }
+    ESP_LOGI(TAG, "All sensors updated successfully.");
     update_failed = false;
     return ESP_OK;
 }

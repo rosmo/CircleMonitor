@@ -1,7 +1,8 @@
 # Hardware Monitor for round 1.28" display
 
 These are available on Aliexpress as "smartwatches". Based on ESP32-C3-MINI and 
-a GC9A01 display controller. 
+a GC9A01 display controller. (By the way, at least my device has quite weak
+WiFi)
 
 ## Requirements
 
@@ -32,9 +33,13 @@ connect to your WiFi.
 
 If all goes well, the sensor data should soon start scrolling on the display.
 
+### Clearing NVS
+
+Press BOOT button after releasing RST.
+
 ### Changing font
 
-Font was converted from TTF to LVGL format using [`lv_font_conv`](https://github.com/lvgl/lv_font_conv):
+Font was converted from TTF to LVGL format using [`lv_font_conv` ](https://github.com/lvgl/lv_font_conv):
 
 ```s
 lv_font_conv \

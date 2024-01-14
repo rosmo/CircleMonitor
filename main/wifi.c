@@ -5,6 +5,8 @@
 #include "esp_sntp.h"
 #include "esp_wifi.h"
 #include "wifi_manager.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/event_groups.h"
 
 #include "lwip/err.h"
 #include "lwip/sys.h"
@@ -14,6 +16,9 @@
 // static int s_retry_num = 0;
 
 bool wifi_connected = false;
+static int wifi_disconnects = 0;
+EventGroupHandle_t wifi_event_group;
+static const int CONNECTED_BIT = BIT0;
 
 void sync_time(void)
 {
@@ -61,7 +66,25 @@ void sync_time(void)
 
 bool wifi_is_connected()
 {
-    return wifi_connected;
+    EventBits_t bits;
+    bits = xEventGroupGetBits(wifi_event_group);
+    if (bits != 0)
+    {
+        return true;
+    } 
+    return false;
+}
+
+void wifi_disconnection_cb(void *pvParameter) 
+{
+    wifi_event_sta_disconnected_t *d = (wifi_event_sta_disconnected_t *)pvParameter;
+    ESP_LOGE(TAG, "Disconnected from WiFi, reason=%u, rssi=%d", d->reason, d->rssi);
+    wifi_disconnects++;
+    if (wifi_disconnects > 3) 
+    {
+        ESP_LOGE(TAG, "Resetting because too many WiFi disconnects.");
+        esp_restart();
+    }
 }
 
 void wifi_connection_cb(void *pvParameter) 
@@ -71,11 +94,15 @@ void wifi_connection_cb(void *pvParameter)
 
 	esp_ip4addr_ntoa(&param->ip_info.ip, str_ip, IP4ADDR_STRLEN_MAX);
 	ESP_LOGI(TAG, "Connected to WiFi, IP address: %s", str_ip);
-    wifi_connected = true;
+
+    xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
 }
 
 void wifi_init(void)
 {
+    wifi_event_group = xEventGroupCreate();
+
 	wifi_manager_start();
     wifi_manager_set_callback(WM_EVENT_STA_GOT_IP, &wifi_connection_cb);
+    wifi_manager_set_callback(WM_EVENT_STA_DISCONNECTED, &wifi_disconnection_cb);
 }

@@ -19,7 +19,7 @@
 #include "sensors.h"
 
 #define TAG "CircleMonitor"
-#define TRUE (1==1)
+#define TRUE (1 == 1)
 #define FALSE (!TRUE)
 #define uS_TO_S_FACTOR (uint64_t)1000000
 
@@ -40,7 +40,8 @@ void chip_info(void)
     unsigned major_rev = chip_info.revision / 100;
     unsigned minor_rev = chip_info.revision % 100;
     printf("Silicon revision v%d.%d, ", major_rev, minor_rev);
-    if(esp_flash_get_size(NULL, &flash_size) != ESP_OK) {
+    if (esp_flash_get_size(NULL, &flash_size) != ESP_OK)
+    {
         printf("Get flash size failed");
         return;
     }
@@ -48,6 +49,18 @@ void chip_info(void)
            (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
 
     printf("Minimum free heap size: %" PRIu32 " bytes\n", esp_get_minimum_free_heap_size());
+
+    printf("GPIO status:\n");
+    gpio_num_t gpios[] = {GPIO_NUM_0, GPIO_NUM_1, GPIO_NUM_2, GPIO_NUM_3, GPIO_NUM_4, GPIO_NUM_5, GPIO_NUM_6, GPIO_NUM_7, GPIO_NUM_8, GPIO_NUM_9, GPIO_NUM_18, GPIO_NUM_19, GPIO_NUM_20, GPIO_NUM_21};
+    for (int i = 0; i < sizeof(gpios) / sizeof(gpio_num_t); i++)
+    {
+        if (gpio_get_level(gpios[i]))
+        {
+            printf("GPIO %d is high.\n", gpios[i]);
+        } else {
+            printf("GPIO %d is low.\n", gpios[i]);
+        }
+    }
 }
 
 void app_main(void)
@@ -55,9 +68,11 @@ void app_main(void)
     printf("CircleMonitor\n");
 
     esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-      ESP_ERROR_CHECK(nvs_flash_erase());
-      ret = nvs_flash_init();
+    if (!gpio_get_level(GPIO_NUM_9) || ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    {
+        ESP_LOGI(TAG, "Erasing NVS...");
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
 
@@ -67,17 +82,17 @@ void app_main(void)
     init_ui();
     run_ui(NULL);
 
+    chip_info();
+
     ESP_LOGD(TAG, "Initialize WiFi...");
     wifi_init();
 
     ESP_LOGD(TAG, "Synchronizing time...");
     // sync_time();
- 
+
     ESP_LOGD(TAG, "Updating sensors...");
     update_sensors();
     keep_updating_sensors();
- 
 
     fflush(stdout);
 }
- 

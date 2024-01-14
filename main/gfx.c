@@ -128,7 +128,7 @@ void init_ui(void)
     init_screen = lv_obj_create(NULL);
     lv_obj_add_style(init_screen, &screen_style, 0);
 
-    char init_label_text[128] = { '\0' };
+    char init_label_text[128] = {'\0'};
     snprintf(init_label_text, sizeof(init_label_text), "Connect to:\n%s\n(pw: %s)", CONFIG_DEFAULT_AP_SSID, CONFIG_DEFAULT_AP_PASSWORD);
     init_label = lv_label_create(init_screen);
     lv_label_set_text(init_label, init_label_text);
@@ -148,9 +148,10 @@ void ui_rotate_task(void *pvParameter)
     bool wifi_connected = wifi_is_connected();
     sensors = get_sensors(&num_sensors, &update_failed);
 
-    if (!wifi_connected)
+    while (!wifi_connected)
     {
         vTaskDelay(pdMS_TO_TICKS(250));
+        ESP_LOGI(TAG, "Waiting for WiFi connection...");
         wifi_connected = wifi_is_connected();
         if (pdTRUE == xSemaphoreTake(xGuiSemaphore, portMAX_DELAY))
         {
@@ -158,26 +159,35 @@ void ui_rotate_task(void *pvParameter)
             xSemaphoreGive(xGuiSemaphore);
         }
     }
-        
+
+    ESP_LOGI(TAG, "WiFi connected, starting the carousel!");
     start_ticks = xTaskGetTickCount();
     while (1)
     {
-        vTaskDelay(pdMS_TO_TICKS(50));
+        vTaskDelay(pdMS_TO_TICKS(1));
 
         ticks = xTaskGetTickCount();
-        if (pdTICKS_TO_MS(ticks - start_ticks) > 3300 || update_failed)
+        if ((pdTICKS_TO_MS(ticks - start_ticks) > 3300 && !update_failed) || (pdTICKS_TO_MS(ticks - start_ticks) > 500 && update_failed))
         {
+            sensors = get_sensors(&num_sensors, &update_failed);
+
+            printf("TICK, update failed: %s\n", (update_failed ? "true" : "false"));
             start_ticks = ticks;
+            // printf("Free heap size: %" PRIu32 "  Minimum free heap size: %" PRIu32 " bytes\n", esp_get_free_heap_size(), esp_get_minimum_free_heap_size());
+
             if (pdTRUE == xSemaphoreTake(xGuiSemaphore, portMAX_DELAY))
             {
-                if (update_failed) 
+                if (update_failed)
                 {
                     if (lv_scr_act() != default_screen)
                     {
                         ESP_LOGI(TAG, "Update failed, showing default screen.");
                         lv_scr_load(default_screen);
                     }
-                } else {
+                }
+                else
+                {
+                    ESP_LOGI(TAG, "Update successful, advancing screen.");
                     for (int i = 0; i < num_sensors; i++)
                     {
                         lv_label_set_text(sensors[i]->label, sensors[i]->value);
@@ -191,6 +201,10 @@ void ui_rotate_task(void *pvParameter)
                     }
                 }
                 xSemaphoreGive(xGuiSemaphore);
+            }
+            else
+            {
+                ESP_LOGE(TAG, "Did not get semaphore?");
             }
         }
     }
